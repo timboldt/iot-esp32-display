@@ -69,10 +69,12 @@ g.append(displayio.TileGrid(bg, pixel_shader=bg_palette, x=0, y=0))
 
 text_area = label.Label(font, text="{}: {}".format(title, latest), color=black)
 text_area.x = 0
-text_area.y = 10
+text_area.y = 5
 g.append(text_area)
 
-graph = Sparkline(width=display.width, height=display.height-10, max_items=len(json["data"]), x=0, y=10, color=black)
+top_gap = 15
+graph = Sparkline(width=display.width, height=display.height-top_gap,
+                  max_items=len(json["data"]), x=0, y=top_gap, color=black)
 for d in json["data"]:
     graph.add_value(float(d[1]), False)
 graph.update()

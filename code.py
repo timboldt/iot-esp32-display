@@ -1,10 +1,11 @@
-import time
+import analogio
 import board
 import displayio
 import os
 import socketpool
 import supervisor
 import terminalio
+import time
 import wifi
 from adafruit_display_text import label
 from adafruit_display_shapes.sparkline import Sparkline
@@ -38,6 +39,9 @@ display = adafruit_il0373.IL0373(
     highlight_color=red,
 )
 
+batt_pin = analogio.AnalogIn(board.D35)
+voltage = round(batt_pin.value * 3.3 * 2 / 65536, 1)
+
 aio_username = os.getenv("AIO_USERNAME")
 aio_key = os.getenv("AIO_KEY")
 aio_feed = "finance.coinbase-btc-usd"
@@ -52,12 +56,13 @@ resp = http.get("http://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=48&r
 json = resp.json()
 resp.close()
 
-title = json["feed"]["name"]
 latest = "NO DATA"
 if len(json["data"]) > 0 and len(json["data"][-1]) >= 2:
     latest = round(float(json["data"][-1][1]), decimals)
 
-print("{}: {}".format(title, latest))
+end_time = json["parameters"]["end_time"]
+title = "{}V {} {} {}: {}".format(voltage, end_time[0:10], end_time[11:16], json["feed"]["name"], latest)
+print(title)
 print("{} data points".format(len(json["data"])))
 
 g = displayio.Group()

@@ -29,15 +29,27 @@ def fetch_feed(http, aio_username, aio_key, feed):
     return json
 
 
-def make_sparkline(data, color):
+def make_graph(json, color, offset):
+    data = json["data"]
+    
+    g = displayio.Group()
+
     text_gap = 15
-    graph = Sparkline(width=display.width, height=display.height-text_gap,
-                      max_items=len(data), x=0, y=0, color=color)
+    graph = Sparkline(width=int(display.width / 2), height=display.height-text_gap,
+                      max_items=len(data), x=offset*int(display.width / 2), y=0, color=color)
     for d in data:
         # Data value is the second value in the structure.
         graph.add_value(float(d[1]), False)
     graph.update()
-    return graph
+    g.append(graph)
+
+    title = label.Label(font, text="{} {}".format(
+        json["feed"]["name"], data[-1][1]), color=color)
+    title.x = offset*int(display.width / 2)
+    title.y = display.height - 5
+    g.append(title)
+
+    return g
 
 
 font = terminalio.FONT
@@ -86,28 +98,19 @@ bg_palette = displayio.Palette(1)
 bg_palette[0] = 0xFFFFFF
 g.append(displayio.TileGrid(bg, pixel_shader=bg_palette, x=0, y=0))
 
-status = label.Label(font, text="{} {}".format(voltage, get_time(http)), color=black)
+status = label.Label(font, text="{} {}".format(
+    voltage, get_time(http)), color=black)
 status.x = 0
 status.y = 5
 g.append(status)
 
 json = fetch_feed(http, aio_username, aio_key, "finance.coinbase-btc-usd")
-if len(json["data"]) > 0:
-    graph = make_sparkline(json["data"], black)
-    g.append(graph)
-    title = label.Label(font, text="{} {}".format(json["feed"]["name"], json["data"][-1][1]), color=black)
-    title.x = 0
-    title.y = display.height - 5
-    g.append(title)
+graph = make_graph(json, black, 0)
+g.append(graph)
 
 json = fetch_feed(http, aio_username, aio_key, "finance.kraken-usdtzusd")
-if len(json["data"]) > 0:
-    graph = make_sparkline(json["data"], red)
-    g.append(graph)
-    title = label.Label(font, text="{} {}".format(json["feed"]["name"], json["data"][-1][1]), color=red)
-    title.x = int(display.width / 2)
-    title.y = display.height - 5
-    g.append(title)
+graph = make_graph(json, red, 1)
+g.append(graph)
 
 display.show(g)
 

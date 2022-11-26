@@ -3,6 +3,7 @@ import board
 import displayio
 import os
 import socketpool
+import ssl
 import supervisor
 import terminalio
 import time
@@ -10,6 +11,7 @@ import wifi
 from adafruit_display_text import label
 from adafruit_display_shapes.sparkline import Sparkline
 import adafruit_il0373
+from adafruit_io.adafruit_io import IO_HTTP
 import adafruit_requests
 
 
@@ -22,7 +24,7 @@ def get_time(http):
 
 
 def fetch_feed(http, aio_username, aio_key, feed):
-    resp = http.get("http://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=48&resolution=10".format(
+    resp = http.get("https://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=48&resolution=10".format(
         aio_username, feed), headers={"X-AIO-Key": aio_key})
     json = resp.json()
     resp.close()
@@ -79,9 +81,6 @@ display = adafruit_il0373.IL0373(
     highlight_color=red,
 )
 
-batt_pin = analogio.AnalogIn(board.D35)
-voltage = round(batt_pin.value * 3.3 * 2 / 65536, 1)
-
 aio_username = os.getenv("AIO_USERNAME")
 aio_key = os.getenv("AIO_KEY")
 decimals = 1
@@ -89,7 +88,13 @@ decimals = 1
 print("Getting data...")
 
 pool = socketpool.SocketPool(wifi.radio)
-http = adafruit_requests.Session(pool)
+http = adafruit_requests.Session(pool, ssl_context=ssl.create_default_context())
+
+batt_pin = analogio.AnalogIn(board.D35)
+voltage = batt_pin.value * 3.3 * 2 / 65536
+io = IO_HTTP(aio_username, aio_key, http)
+voltage_feed = io.get_feed("tricolor-battery")
+io.send_data(voltage_feed["key"], voltage)
 
 g = displayio.Group()
 
@@ -99,7 +104,7 @@ bg_palette[0] = 0xFFFFFF
 g.append(displayio.TileGrid(bg, pixel_shader=bg_palette, x=0, y=0))
 
 status = label.Label(font, text="{} {}".format(
-    voltage, get_time(http)), color=black)
+    round(voltage, 1), get_time(http)), color=black)
 status.x = 0
 status.y = 5
 g.append(status)

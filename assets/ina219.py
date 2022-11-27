@@ -17,6 +17,7 @@ print("")
 ina219.bus_adc_resolution = ADCResolution.ADCRES_12BIT_1S
 ina219.shunt_adc_resolution = ADCResolution.ADCRES_12BIT_1S
 ina219.bus_voltage_range = BusVoltageRange.RANGE_16V
+ina219.set_calibration_16V_400mA()
 
 # measure and display loop
 while True:

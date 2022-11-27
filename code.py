@@ -55,13 +55,18 @@ def make_graph(json, color, offset):
 
     return g
 
-
+# Constants.
 font = terminalio.FONT
 black = 0x0000FF
 white = 0xFFFFFF
 red = 0xFF0000
 
 displayio.release_displays()
+
+# Turn of I2C/Neopixel to save power.
+power_pin = digitalio.DigitalInOut(board.NEOPIXEL_I2C_POWER)
+power_pin.direction = digitalio.Direction.OUTPUT
+power_pin.value = False
 
 spi = board.SPI()
 epd_cs = board.D15
@@ -92,11 +97,7 @@ print("Getting data...")
 pool = socketpool.SocketPool(wifi.radio)
 http = adafruit_requests.Session(pool, ssl_context=ssl.create_default_context())
 
-power_pin = digitalio.DigitalInOut(board.NEOPIXEL_I2C_POWER)
-power_pin.direction = digitalio.Direction.OUTPUT
-power_pin.value = True
-
-batt_pin = analogio.AnalogIn(board.D35) # TODO: try board.VOLTAGE_MONITOR
+batt_pin = analogio.AnalogIn(board.VOLTAGE_MONITOR)
 voltage = batt_pin.value * 3.3 * 2 / 65536
 io = IO_HTTP(aio_username, aio_key, http)
 voltage_feed = io.get_feed("tricolor-battery")
@@ -128,17 +129,14 @@ display.show(g)
 display.refresh()
 print("refreshed")
 
-# Turn of I2C/Neopixel to save power.
-power_pin.value = False
-
 if voltage > 4.15:
     # Light sleep for 3 minutes.
     time.sleep(180)
 else:
     print("Entering deep sleep in a few seconds...")
-    time.sleep(20)
+    time.sleep(10)
     # Deep sleep for a few minutes.
-    time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + 3*60)
+    time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + 15*60)
     alarm.exit_and_deep_sleep_until_alarms(time_alarm)
     # In theory, the code won't get to this point, because deep sleep causes a reset.
 

@@ -1,13 +1,29 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
 #include <GxEPD2_BW.h>
+#include <HTTPClient.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <WiFiMulti.h>
 #include <stdint.h>
 
+#include "arduino_secrets.h"
 #include "display.h"
 #include "graph.h"
 
+WiFiMulti wifi;
+
 void setup() {
     Serial.begin(115200);
+
+    Serial.println("Connecting to WiFi...");
+    WiFi.mode(WIFI_STA);
+    wifi.addAP(SECRET_WIFI_SSID, SECRET_WIFI_PASSWORD);
+    while (wifi.run() != WL_CONNECTED) {
+        Serial.print(">");
+        delay(1000);
+    }
+    Serial.println("Connected.");
 
     // Initialize the display: Waveshare 4.2" B/W EPD.
     Serial.println("Initializing display...");
@@ -18,6 +34,38 @@ void setup() {
 
 void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
+
+    WiFiClientSecure* client = new WiFiClientSecure;
+    if (client) {
+        client->setInsecure();  // skip verification
+        {
+            HTTPClient https;
+            const String& url = "https://www.example.com";
+            if (https.begin(*client, url)) {
+                int httpCode = https.GET();
+                if (httpCode > 0) {
+                    // HTTP header has been send and Server response header has
+                    // been handled
+                    Serial.printf("HTTP GET... code: %d\n", httpCode);
+
+                    if (httpCode == HTTP_CODE_OK ||
+                        httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                        String payload = https.getString();
+                        Serial.println(payload);
+                    }
+                } else {
+                    Serial.printf("HTTPS GET failed, error: %s\n",
+                                  https.errorToString(httpCode).c_str());
+                }
+                https.end();
+            } else {
+                Serial.printf("Failed to make HTTP call to %s", url);
+            }
+        }
+    } else {
+        Serial.println("Failed to create TCP client.");
+    }
+
     Serial.println("Writing to display...");
     display.firstPage();
     do {
@@ -65,18 +113,29 @@ void loop() {
             15368.69832, 16003.28265, 16999.66897, 15254.85826, 15090.09817,
             16750.02748, 16103.80357, 15443.05650, 16526.24101, 16945.87675};
 
-        String labels[] = {
-            "", "finance.coinbase-btc-usd", "finance.kraken-usdtzusd", "finance.bitfinex-ustusd",
-            "mbr.temperature", "mbr.pressure", "mbr.humidity", "mbr.abs-humidity",
-            "mbr-sgp30.co2", "mbr-sgp30.tvoc", "mbr.lux-db", "mbr-tsl2591.infrared",
-            "weather.temp", "weather.humidity", "tricolor-battery", "bigpaper-battery"
-        };
+        String labels[] = {"",
+                           "finance.coinbase-btc-usd",
+                           "finance.kraken-usdtzusd",
+                           "finance.bitfinex-ustusd",
+                           "mbr.temperature",
+                           "mbr.pressure",
+                           "mbr.humidity",
+                           "mbr.abs-humidity",
+                           "mbr-sgp30.co2",
+                           "mbr-sgp30.tvoc",
+                           "mbr.lux-db",
+                           "mbr-tsl2591.infrared",
+                           "weather.temp",
+                           "weather.humidity",
+                           "tricolor-battery",
+                           "bigpaper-battery"};
         for (int16_t x = 0; x < 4; x++) {
             for (int16_t y = 0; y < 3; y++) {
                 if (x == 0 && y == 0) {
                     // TODO: Show current date/time and voltage.
                 } else {
-                    draw_graph(labels[x+y*4], x*100, y*100, 100, 100, 200, vals);
+                    draw_graph(labels[x + y * 4], x * 100, y * 100, 100, 100,
+                               200, vals);
                 }
             }
         }

@@ -40,7 +40,9 @@ void loop() {
         client->setInsecure();  // skip verification
         {
             HTTPClient https;
-            const String& url = "https://www.example.com";
+            const String feed_name = "tricolor-battery";
+            const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME "/feeds/" + feed_name + "/data/chart?hours=48&resolution=10";
+            https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
             if (https.begin(*client, url)) {
                 int httpCode = https.GET();
                 if (httpCode > 0) {
@@ -59,7 +61,7 @@ void loop() {
                 }
                 https.end();
             } else {
-                Serial.printf("Failed to make HTTP call to %s", url);
+                Serial.printf("Failed to make HTTP call to %s", url.c_str());
             }
         }
     } else {

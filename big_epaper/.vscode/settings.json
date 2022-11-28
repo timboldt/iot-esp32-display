@@ -1,0 +1,16 @@
+{
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4 }",
+    "C_Cpp.default.includePath": [
+        "/home/tim/.arduino15/packages/**",
+        "/home/tim/Arduino/libraries/**"
+    ],
+    "C_Cpp.default.defines": [
+        "ESP32 CORE_DEBUG_LEVEL=0",
+        "ARDUINO_RUNNING_CORE=1",
+        "ARDUINO_EVENT_RUNNING_CORE=1",
+        "BOARD_HAS_PSRAM ARDUINO_USB_CDC_ON_BOOT=0"
+    ],
+    "files.associations": {
+        "cmath": "cpp"
+    }
+}

@@ -54,14 +54,16 @@ static void draw_sparkline(int16_t corner_x, int16_t corner_y, int16_t width,
 void draw_graph(const String &label, int16_t corner_x, int16_t corner_y,
                 int16_t width, int16_t height, size_t num_values,
                 float values[]) {
+    const int16_t padding = 2;
+
     int16_t fx, fy;
     uint16_t fw, fh;
+    display.setFont(&FreeSans9pt7b);
     display.getTextBounds(label, corner_x, corner_y, &fx, &fy, &fw, &fh);
-    display.setCursor(corner_x + width / 2 - fw / 2, corner_y + fh);
+    display.setCursor(corner_x + width / 2 - fw / 2, corner_y + height - padding);
     display.setTextColor(GxEPD_BLACK);
     display.print(label);
-    int16_t padding = 2;
-    draw_sparkline(corner_x + padding, corner_y + fh + padding,
-                   width - padding * 2, height - fh - padding * 2, num_values,
+    draw_sparkline(corner_x + padding, corner_y + padding,
+                   width - padding * 2, height - fh - padding * 3, num_values,
                    values);
 }

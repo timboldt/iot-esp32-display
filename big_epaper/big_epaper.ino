@@ -65,9 +65,19 @@ void loop() {
             15368.69832, 16003.28265, 16999.66897, 15254.85826, 15090.09817,
             16750.02748, 16103.80357, 15443.05650, 16526.24101, 16945.87675};
 
-        for (int16_t x = 0; x < 400; x += 100) {
-            for (int16_t y = 0; y < 300; y += 100) {
-                draw_graph("Blah Price", x, y, 100, 100, 200, vals);
+        String labels[] = {
+            "", "finance.coinbase-btc-usd", "finance.kraken-usdtzusd", "finance.bitfinex-ustusd",
+            "mbr.temperature", "mbr.pressure", "mbr.humidity", "mbr.abs-humidity",
+            "mbr-sgp30.co2", "mbr-sgp30.tvoc", "mbr.lux-db", "mbr-tsl2591.infrared",
+            "weather.temp", "weather.humidity", "tricolor-battery", "bigpaper-battery"
+        };
+        for (int16_t x = 0; x < 4; x++) {
+            for (int16_t y = 0; y < 3; y++) {
+                if (x == 0 && y == 0) {
+                    // TODO: Show current date/time and voltage.
+                } else {
+                    draw_graph(labels[x+y*4], x*100, y*100, 100, 100, 200, vals);
+                }
             }
         }
     } while (display.nextPage());

@@ -2,7 +2,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
-#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/Picopixel.h>
 
 #include "display.h"
 
@@ -58,7 +58,7 @@ void draw_graph(const String &label, int16_t corner_x, int16_t corner_y,
 
     int16_t fx, fy;
     uint16_t fw, fh;
-    display.setFont(&FreeSans9pt7b);
+    display.setFont(&Picopixel);
     display.getTextBounds(label, corner_x, corner_y, &fx, &fy, &fw, &fh);
     display.setCursor(corner_x + width / 2 - fw / 2, corner_y + height - padding);
     display.setTextColor(GxEPD_BLACK);

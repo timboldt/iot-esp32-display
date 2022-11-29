@@ -12,7 +12,7 @@
 #include "display.h"
 #include "graph.h"
 
-const size_t MAX_VALS = 256;
+const size_t MAX_VALS = 300;
 
 WiFiMulti wifi;
 
@@ -103,34 +103,27 @@ void loop() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        String labels[] = {"",
-                           "finance.coinbase-btc-usd",
-                           "finance.kraken-usdtzusd",
-                           "finance.bitfinex-ustusd",
-                           "mbr.temperature",
-                           "mbr.pressure",
-                           "mbr.humidity",
+        String labels[] = {// First row.
+                           "weather.temp", "finance.coinbase-btc-usd",
+                           "finance.kraken-usdtzusd", "finance.bitfinex-ustusd",
+                           // Second row.
+                           "mbr.temperature", "mbr.pressure", "mbr.humidity",
                            "mbr.abs-humidity",
-                           "mbr-sgp30.co2",
-                           "mbr-sgp30.tvoc",
-                           "mbr.lux-db",
-                           "mbr-tsl2591.infrared",
-                           "weather.temp",
-                           "weather.humidity",
-                           "tricolor-battery",
-                           "bigpaper-battery"};
+                           // Third row.
+                           "mbr-sgp30.co2", "mbr-sgp30.tvoc", "mbr.lux-db", ""};
         for (int16_t x = 0; x < 4; x++) {
             for (int16_t y = 0; y < 3; y++) {
+                String feed_name = labels[x + y * 4];
                 Serial.printf("Processing graph (%d, %d)\n", x, y);
-                if (x == 0 && y == 0) {
+                if (feed_name.length() == 0) {
                     // TODO: Show current date/time and voltage.
                 } else {
                     String name;
                     float vals[MAX_VALS];
                     size_t val_count =
-                        fetch_data(client, labels[x + y * 4], vals, &name);
-                    draw_graph(name, x * 100, y * 100, 100, 100,
-                               val_count, vals);
+                        fetch_data(client, feed_name, vals, &name);
+                    draw_graph(name, x * 100, y * 100, 100, 100, val_count,
+                               vals);
                 }
             }
         }

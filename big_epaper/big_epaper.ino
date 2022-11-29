@@ -17,6 +17,12 @@ const size_t MAX_VALS = 300;
 
 WiFiMulti wifi;
 
+float battery_voltage() {
+    float raw = analogRead(BATT_MONITOR);
+    // 50% voltage divider with a 3.3V reference and 4096 divisions.
+    return raw * 2.0 * 3.3 / 4096;
+}
+
 void get_time(WiFiClientSecure* client, String* time) {
     *time = "UNKNOWN";
     if (!client) {
@@ -148,9 +154,11 @@ void loop() {
                     String time;
                     get_time(client, &time);
                     display.setFont(&FreeSans9pt7b);
-                    display.setCursor(x * 100 + 2, y * 100 + 100 - 2);
                     display.setTextColor(GxEPD_BLACK);
+                    display.setCursor(x * 100 + 2, y * 100 + 60);
                     display.print(time);
+                    display.setCursor(x * 100 + 2, y * 100 + 80);
+                    display.printf("%.2f V", battery_voltage());
                 } else {
                     String name;
                     float vals[MAX_VALS];
@@ -165,5 +173,12 @@ void loop() {
     display.hibernate();
     Serial.println("Write to display complete.");
     digitalWrite(LED_BUILTIN, LOW);
-    delay(180000);
+    if (battery_voltage() < 4.15) {
+        pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
+        digitalWrite(NEOPIXEL_I2C_POWER, LOW);
+        esp_sleep_enable_timer_wakeup(180 * 1000000ULL);
+        esp_deep_sleep_start();
+        // we never reach here
+    }
+    delay(180 * 1000);
 }

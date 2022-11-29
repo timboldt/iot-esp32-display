@@ -60,10 +60,10 @@ void draw_graph(const String &label, int16_t corner_x, int16_t corner_y,
     uint16_t fw, fh;
     display.setFont(&Picopixel);
     display.getTextBounds(label, corner_x, corner_y, &fx, &fy, &fw, &fh);
-    display.setCursor(corner_x + width / 2 - fw / 2, corner_y + height - padding);
+    display.setCursor(corner_x + width / 2 - fw / 2,
+                      corner_y + height - padding);
     display.setTextColor(GxEPD_BLACK);
-    display.print(label);
-    draw_sparkline(corner_x + padding, corner_y + padding,
-                   width - padding * 2, height - fh - padding * 3, num_values,
-                   values);
+    display.printf("%s: %f", label.c_str(), values[num_values - 1]);
+    draw_sparkline(corner_x + padding, corner_y + padding, width - padding * 2,
+                   height - fh - padding * 3, num_values, values);
 }

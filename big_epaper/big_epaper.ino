@@ -1,6 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <Fonts/FreeSans9pt7b.h>
 #include <GxEPD2_BW.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
@@ -15,6 +16,34 @@
 const size_t MAX_VALS = 300;
 
 WiFiMulti wifi;
+
+void get_time(WiFiClientSecure* client, String* time) {
+    *time = "UNKNOWN";
+    if (!client) {
+        return;
+    }
+    HTTPClient https;
+    const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
+                       "/integrations/time/strftime?fmt=%25I:%25M%20%25p";
+    https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
+    if (https.begin(*client, url)) {
+        int httpCode = https.GET();
+        if (httpCode > 0) {
+            Serial.printf("HTTP GET... code: %d\n", httpCode);
+
+            if (httpCode == HTTP_CODE_OK ||
+                httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                *time = https.getString();
+            }
+        } else {
+            Serial.printf("HTTPS GET failed, error: %s\n",
+                          https.errorToString(httpCode).c_str());
+        }
+        https.end();
+    } else {
+        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+    }
+}
 
 size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
                   float vals[], String* name) {
@@ -116,7 +145,12 @@ void loop() {
                 String feed_name = labels[x + y * 4];
                 Serial.printf("Processing graph (%d, %d)\n", x, y);
                 if (feed_name.length() == 0) {
-                    // TODO: Show current date/time and voltage.
+                    String time;
+                    get_time(client, &time);
+                    display.setFont(&FreeSans9pt7b);
+                    display.setCursor(x * 100 + 2, y * 100 + 100 - 2);
+                    display.setTextColor(GxEPD_BLACK);
+                    display.print(time);
                 } else {
                     String name;
                     float vals[MAX_VALS];

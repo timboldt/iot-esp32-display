@@ -173,12 +173,14 @@ void loop() {
     display.hibernate();
     Serial.println("Write to display complete.");
     digitalWrite(LED_BUILTIN, LOW);
-    if (battery_voltage() < 4.15) {
-        pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
-        digitalWrite(NEOPIXEL_I2C_POWER, LOW);
-        esp_sleep_enable_timer_wakeup(180 * 1000000ULL);
-        esp_deep_sleep_start();
-        // we never reach here
+    pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
+    digitalWrite(NEOPIXEL_I2C_POWER, LOW);
+    if (battery_voltage() > 3.8) {
+        esp_sleep_enable_timer_wakeup(3 * 60 * 1000000ULL);
+    } else {
+        esp_sleep_enable_timer_wakeup(15 * 60 * 1000000ULL);
     }
-    delay(180 * 1000);
+    esp_deep_sleep_start();
+    // we never reach here
+    delay(3 * 60 * 1000);
 }

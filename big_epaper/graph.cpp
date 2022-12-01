@@ -2,7 +2,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
-#include <Fonts/Picopixel.h>
+#include <Fonts/FreeSans9pt7b.h>
 
 #include "display.h"
 
@@ -54,16 +54,24 @@ static void draw_sparkline(int16_t corner_x, int16_t corner_y, int16_t width,
 void draw_graph(const String &label, int16_t corner_x, int16_t corner_y,
                 int16_t width, int16_t height, size_t num_values,
                 float values[]) {
-    const int16_t padding = 2;
+    const int16_t padding = 5;
 
     int16_t fx, fy;
     uint16_t fw, fh;
-    display.setFont(&Picopixel);
+    display.setFont(&FreeSans9pt7b);
     display.getTextBounds(label, corner_x, corner_y, &fx, &fy, &fw, &fh);
-    display.setCursor(corner_x + width / 2 - fw / 2,
-                      corner_y + height - padding);
+    display.setCursor(corner_x, corner_y + height - padding);
     display.setTextColor(GxEPD_BLACK);
-    display.printf("%s: %.4f", label.c_str(), values[num_values - 1]);
+    float last_val = values[num_values - 1];
+    if (last_val < 2) {
+        display.printf("%s: %.3f", label.c_str(), last_val);
+    } else if (last_val < 100) {
+        display.printf("%s: %.2f", label.c_str(), last_val);
+    } else if (last_val < 1000) {
+        display.printf("%s: %.f", label.c_str(), last_val);
+    } else {
+        display.printf("%s: %.1fK", label.c_str(), last_val / 1000);
+    }
     draw_sparkline(corner_x + padding, corner_y + padding, width - padding * 2,
                    height - fh - padding * 3, num_values, values);
 }

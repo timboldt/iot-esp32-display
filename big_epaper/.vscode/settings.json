@@ -11,6 +11,8 @@
         "BOARD_HAS_PSRAM ARDUINO_USB_CDC_ON_BOOT=0"
     ],
     "files.associations": {
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "ranges": "cpp",
+        "string": "cpp"
     }
 }

@@ -64,7 +64,7 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
                        "/feeds/" +
-                       feed_name + "/data/chart?hours=48&resolution=10";
+                       feed_name + "/data/chart?hours=168&resolution=60";
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
     if (https.begin(*client, url)) {
         int httpCode = https.GET();
@@ -138,34 +138,45 @@ void loop() {
     do {
         display.fillScreen(GxEPD_WHITE);
 
-        String labels[] = {// First row.
-                           "weather.temp", "finance.coinbase-btc-usd",
-                           "finance.kraken-usdtzusd", "finance.bitfinex-ustusd",
-                           // Second row.
-                           "mbr.temperature", "mbr.pressure", "mbr.humidity",
+        String labels[] = {"",
+                           "weather.temp",
+                           "mbr.temperature",
+                           "mbr.pressure",
+                           "finance.coinbase-btc-usd",
+                           "finance.kraken-usdtzusd",
+
+                           "finance.bitfinex-ustusd",
+                           "mbr.humidity",
                            "mbr.abs-humidity",
-                           // Third row.
-                           "mbr-sgp30.co2", "mbr-sgp30.tvoc", "mbr.lux-db", ""};
-        for (int16_t x = 0; x < 4; x++) {
-            for (int16_t y = 0; y < 3; y++) {
-                String feed_name = labels[x + y * 4];
+                           "mbr-sgp30.co2",
+                           "mbr-sgp30.tvoc",
+                           "mbr.lux-db"};
+
+        const int16_t graph_width = 200;
+        const int16_t graph_height = 100;
+        for (int16_t x = 0; x < display.width() / graph_width; x++) {
+            for (int16_t y = 0; y < display.height() / graph_height; y++) {
+                String feed_name =
+                    labels[x + y * display.width() / graph_width];
                 Serial.printf("Processing graph (%d, %d)\n", x, y);
                 if (feed_name.length() == 0) {
                     String time;
                     get_time(client, &time);
                     display.setFont(&FreeSans9pt7b);
                     display.setTextColor(GxEPD_BLACK);
-                    display.setCursor(x * 100 + 2, y * 100 + 60);
+                    display.setCursor(x * graph_width + 2,
+                                      y * graph_height + 60);
                     display.print(time);
-                    display.setCursor(x * 100 + 2, y * 100 + 80);
+                    display.setCursor(x * graph_width + 2,
+                                      y * graph_height + graph_height * 4 / 5);
                     display.printf("%.2f V", battery_voltage());
                 } else {
                     String name;
                     float vals[MAX_VALS];
                     size_t val_count =
                         fetch_data(client, feed_name, vals, &name);
-                    draw_graph(name, x * 100, y * 100, 100, 100, val_count,
-                               vals);
+                    draw_graph(name, x * graph_width, y * graph_height,
+                               graph_width, graph_height, val_count, vals);
                 }
             }
         }

@@ -26,7 +26,7 @@ def get_time(http):
 
 
 def fetch_feed(http, aio_username, aio_key, feed):
-    resp = http.get("https://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=48&resolution=10".format(
+    resp = http.get("https://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=168&resolution=60".format(
         aio_username, feed), headers={"X-AIO-Key": aio_key})
     json = resp.json()
     resp.close()
@@ -47,8 +47,17 @@ def make_graph(json, color, offset):
     graph.update()
     g.append(graph)
 
-    title = label.Label(font, text="{} {}".format(
-        json["feed"]["name"], data[-1][1]), color=color)
+    v = float(data[-1][1])
+    fmt = "{} {}"
+    if v > 2000:
+        v /= 1000
+        fmt = "{} {}k"
+    if v < 10:
+        v = round(v, 4)
+    else:
+        v = round(v, 2)
+    title = label.Label(font, text=fmt.format(
+        json["feed"]["name"], v), color=color)
     title.x = offset*int(display.width / 2)
     title.y = display.height - 5
     g.append(title)
@@ -117,11 +126,11 @@ status.y = 5
 g.append(status)
 
 json = fetch_feed(http, aio_username, aio_key, "finance.coinbase-btc-usd")
-graph = make_graph(json, black, 0)
+graph = make_graph(json, red, 0)
 g.append(graph)
 
 json = fetch_feed(http, aio_username, aio_key, "finance.kraken-usdtzusd")
-graph = make_graph(json, red, 1)
+graph = make_graph(json, black, 1)
 g.append(graph)
 
 display.show(g)

@@ -26,7 +26,7 @@ def get_time(http):
 
 
 def fetch_feed(http, aio_username, aio_key, feed):
-    resp = http.get("https://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=168&resolution=60".format(
+    resp = http.get("https://io.adafruit.com/api/v2/{}/feeds/{}/data/chart?hours=720&resolution=240".format(
         aio_username, feed), headers={"X-AIO-Key": aio_key})
     json = resp.json()
     resp.close()

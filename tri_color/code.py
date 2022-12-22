@@ -145,7 +145,7 @@ else:
     print("Entering deep sleep in a few seconds...")
     time.sleep(10)
     # Deep sleep for a few minutes.
-    time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + 15*60)
+    time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + 60*60)
     alarm.exit_and_deep_sleep_until_alarms(time_alarm)
     # In theory, the code won't get to this point, because deep sleep causes a reset.
 

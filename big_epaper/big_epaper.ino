@@ -7,8 +7,8 @@
 #include <WiFiMulti.h>
 #include <stdint.h>
 
-#include "arduino_secrets.h"
 #include "adafruit_io.h"
+#include "arduino_secrets.h"
 #include "display.h"
 #include "graph.h"
 
@@ -21,7 +21,6 @@ float battery_voltage() {
     // 50% voltage divider with a 3.3V reference and 4096 divisions.
     return raw * 2.0 * 3.3 / 4096;
 }
-
 
 void setup() {
     Serial.begin(115200);
@@ -51,6 +50,8 @@ void loop() {
     } else {
         Serial.println("Failed to create TCP client.");
     }
+
+    send_data(client, "bigpaper-battery", battery_voltage());
 
     Serial.println("Writing to display...");
     display.firstPage();
@@ -90,6 +91,9 @@ void loop() {
                                       y * graph_height + graph_height * 4 / 5);
                     display.printf("%.2f V", battery_voltage());
                 } else {
+                    // TODO: It is horrible that we are refetching if the full
+                    // display can't be drawn in one step. Move the data
+                    // fetch outside the loop.
                     String name;
                     float vals[MAX_VALS];
                     size_t val_count =

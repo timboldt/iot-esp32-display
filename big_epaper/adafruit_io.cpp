@@ -34,8 +34,8 @@ void get_time(WiFiClientSecure* client, String* time) {
 }
 
 size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
-                  size_t num_vals, float vals[], String* name) {
-    *name = "NO DATA";
+                  size_t num_vals, float vals[], String* description) {
+    *description = "NO DATA";
     if (!client) {
         return 0;
     }
@@ -72,7 +72,7 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
                     JsonArray elem = data[i];
                     vals[i] = elem[1].as<float>();
                 }
-                *name = doc["feed"]["name"].as<String>();
+                *description = doc["feed"]["name"].as<String>();
             }
         } else {
             Serial.printf("HTTPS GET failed, error: %s\n",
@@ -84,4 +84,40 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
     }
 
     return val_count;
+}
+
+bool send_data(WiFiClientSecure* client, const String& feed_name, float val) {
+    bool is_ok = false;
+
+    if (!client) {
+        return is_ok;
+    }
+
+    HTTPClient https;
+    const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
+                       "/feeds/" +
+                       feed_name + "/data";
+    https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
+    https.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    if (https.begin(*client, url)) {
+        int httpCode = https.POST("value=" + String(val));
+        if (httpCode > 0) {
+            // HTTP header has been send and Server response header has
+            // been handled
+            Serial.printf("HTTP POST... code: %d\n", httpCode);
+
+            if (httpCode == HTTP_CODE_OK ||
+                httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                is_ok = true;
+            }
+        } else {
+            Serial.printf("HTTPS POST failed, error: %s\n",
+                          https.errorToString(httpCode).c_str());
+        }
+        https.end();
+    } else {
+        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+    }
+
+    return is_ok;
 }

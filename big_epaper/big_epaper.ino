@@ -1,7 +1,6 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
 #include <Fonts/FreeSans9pt7b.h>
-#include <GxEPD2_BW.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
@@ -34,7 +33,6 @@ void setup() {
     }
     Serial.println("Connected.");
 
-    // Initialize the display: Waveshare 4.2" B/W EPD.
     Serial.println("Initializing display...");
     display.init();
 
@@ -51,62 +49,70 @@ void loop() {
         Serial.println("Failed to create TCP client.");
     }
 
+#ifdef TRI_COLOR
+    send_data(client, "tricolor-battery", battery_voltage());
+
+    String labels[] = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd"};
+#else
     send_data(client, "bigpaper-battery", battery_voltage());
+
+    String labels[] = {"",
+                       "weather.temp",
+                       "mbr.temperature",
+                       "mbr.pressure",
+                       "finance.coinbase-btc-usd",
+                       "finance.kraken-usdtzusd",
+
+                       "finance.bitfinex-ustusd",
+                       "mbr.humidity",
+                       "mbr.abs-humidity",
+                       "mbr-sgp30.co2",
+                       "mbr-sgp30.tvoc",
+                       "mbr.lux-db"};
+#endif
 
     Serial.println("Writing to display...");
     display.firstPage();
-    do {
-        display.fillScreen(GxEPD_WHITE);
+    display.fillScreen(GxEPD_WHITE);
 
-        String labels[] = {"",
-                           "weather.temp",
-                           "mbr.temperature",
-                           "mbr.pressure",
-                           "finance.coinbase-btc-usd",
-                           "finance.kraken-usdtzusd",
-
-                           "finance.bitfinex-ustusd",
-                           "mbr.humidity",
-                           "mbr.abs-humidity",
-                           "mbr-sgp30.co2",
-                           "mbr-sgp30.tvoc",
-                           "mbr.lux-db"};
-
-        const int16_t graph_width = 200;
-        const int16_t graph_height = 100;
-        for (int16_t x = 0; x < display.width() / graph_width; x++) {
-            for (int16_t y = 0; y < display.height() / graph_height; y++) {
-                String feed_name =
-                    labels[x + y * display.width() / graph_width];
-                Serial.printf("Processing graph (%d, %d)\n", x, y);
-                if (feed_name.length() == 0) {
-                    String time;
-                    get_time(client, &time);
-                    display.setFont(&FreeSans9pt7b);
-                    display.setTextColor(GxEPD_BLACK);
-                    display.setCursor(x * graph_width + 2,
-                                      y * graph_height + 60);
-                    display.print(time);
-                    display.setCursor(x * graph_width + 2,
-                                      y * graph_height + graph_height * 4 / 5);
-                    display.printf("%.2f V", battery_voltage());
-                } else {
-                    // TODO: It is horrible that we are refetching if the full
-                    // display can't be drawn in one step. Move the data
-                    // fetch outside the loop.
-                    String name;
-                    float vals[MAX_VALS];
-                    size_t val_count =
-                        fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                    draw_graph(name, x * graph_width, y * graph_height,
-                               graph_width, graph_height, val_count, vals);
-                }
+    const int16_t graph_width = 200;
+    const int16_t graph_height = 100;
+    for (int16_t x = 0; x < display.width() / graph_width; x++) {
+        for (int16_t y = 0; y < display.height() / graph_height; y++) {
+            String feed_name = labels[x + y * display.width() / graph_width];
+            Serial.printf("Processing graph (%d, %d)\n", x, y);
+            if (feed_name.length() == 0) {
+                String time;
+                get_time(client, &time);
+                display.setFont(&FreeSans9pt7b);
+                display.setTextColor(GxEPD_BLACK);
+                display.setCursor(x * graph_width + 2, y * graph_height + 60);
+                display.print(time);
+                display.setCursor(x * graph_width + 2,
+                                  y * graph_height + graph_height * 4 / 5);
+                display.printf("%.2f V", battery_voltage());
+            } else {
+                String name;
+                float vals[MAX_VALS];
+                size_t val_count =
+                    fetch_data(client, feed_name, MAX_VALS, vals, &name);
+                draw_graph(name, x * graph_width, y * graph_height, graph_width,
+                           graph_height, val_count, vals);
             }
         }
-    } while (display.nextPage());
+    }
+    if (display.nextPage()) {
+        Serial.println(
+            "Display buffer is too small. Doesn't fit on single page.");
+    }
     display.hibernate();
     Serial.println("Write to display complete.");
+
     digitalWrite(LED_BUILTIN, LOW);
+
+    //
+    // Power down.
+    //
     pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_I2C_POWER, LOW);
     if (battery_voltage() > 3.8) {
@@ -115,6 +121,7 @@ void loop() {
         esp_sleep_enable_timer_wakeup(15 * 60 * 1000000ULL);
     }
     esp_deep_sleep_start();
+    
     // we never reach here
     delay(3 * 60 * 1000);
 }

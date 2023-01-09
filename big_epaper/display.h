@@ -10,4 +10,5 @@
          ? EPD::HEIGHT                                         \
          : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 
+// Waveshare 4.2" B/W EPD.
 extern GxEPD2_BW<GxEPD2_420, MAX_HEIGHT(GxEPD2_420)> display;

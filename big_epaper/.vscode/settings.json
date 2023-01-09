@@ -18,6 +18,13 @@
         "cmath": "cpp",
         "ranges": "cpp",
         "string": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "*.tcc": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "numeric": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp"
     }
 }

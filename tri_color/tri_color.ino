@@ -1,7 +1,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ThinkInk.h>
 #include <Arduino.h>
-#include <Fonts/FreeSans9pt7b.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
@@ -60,38 +59,35 @@ void loop() {
 
     send_data(client, "tricolor-battery", battery_voltage());
 
-    String labels[] = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd", "", ""};
+    String labels[] = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd",
+                       "finance.bitfinex-ustusd"};
 
     Serial.println("Writing to display...");
     display.clearBuffer();
-    // display.fillScreen(EPD_WHITE);
 
-    const int16_t graph_width = 296 / 2;
-    const int16_t graph_height = 128;
+    const int16_t graph_width = display.width() / 3;
+    const int16_t graph_height = display.height();
     for (int16_t x = 0; x < display.width() / graph_width; x++) {
         for (int16_t y = 0; y < display.height() / graph_height; y++) {
             String feed_name = labels[x + y * display.width() / graph_width];
             Serial.printf("Processing graph (%d, %d)\n", x, y);
-            if (feed_name.length() == 0) {
-                String time;
-                get_time(client, &time);
-                display.setFont(&FreeSans9pt7b);
-                display.setTextColor(EPD_BLACK);
-                display.setCursor(x * graph_width + 2, y * graph_height + 60);
-                display.print(time);
-                display.setCursor(x * graph_width + 2,
-                                  y * graph_height + graph_height * 4 / 5);
-                display.printf("%.2f V", battery_voltage());
-            } else {
+            if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
                 size_t val_count =
                     fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                draw_graph(&display, name, x * graph_width, y * graph_height,
-                           graph_width, graph_height, val_count, vals);
+                uint16_t line_color = ((x + y) % 2 == 0) ? EPD_BLACK : EPD_RED;
+                draw_graph(&display, name, line_color, x * graph_width,
+                           y * graph_height, graph_width, graph_height,
+                           val_count, vals);
             }
         }
     }
+
+    String time;
+    get_time(client, &time);
+    show_status(&display, time, battery_voltage(), 2, 8);
+
     // Display values and then power down display (sleep == true).
     display.display(true);
     Serial.println("Write to display complete.");
@@ -103,10 +99,10 @@ void loop() {
     //
     pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_I2C_POWER, LOW);
-    if (battery_voltage() > 3.8) {
+    if (battery_voltage() > 3.9) {
         esp_sleep_enable_timer_wakeup(3 * 60 * 1000000ULL);
     } else {
-        esp_sleep_enable_timer_wakeup(15 * 60 * 1000000ULL);
+        esp_sleep_enable_timer_wakeup(30 * 60 * 1000000ULL);
     }
     esp_deep_sleep_start();
 

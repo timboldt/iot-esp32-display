@@ -27,9 +27,9 @@ static void get_min_max(size_t num_values, float values[], float *min_val,
     }
 }
 
-static void draw_sparkline(Adafruit_GFX *display, int16_t corner_x,
-                           int16_t corner_y, int16_t width, int16_t height,
-                           size_t num_values, float values[]) {
+static void draw_sparkline(Adafruit_GFX *display, uint16_t line_color,
+                           int16_t corner_x, int16_t corner_y, int16_t width,
+                           int16_t height, size_t num_values, float values[]) {
     float min_val, max_val;
     get_min_max(num_values, values, &min_val, &max_val);
 
@@ -43,16 +43,16 @@ static void draw_sparkline(Adafruit_GFX *display, int16_t corner_x,
             round((values[i] - min_val) / (max_val - min_val) * height) +
             corner_y;
         if (i > 0) {
-            display->drawLine(prev_x, prev_y, x, y, EPD_BLACK);
+            display->drawLine(prev_x, prev_y, x, y, line_color);
         }
         prev_x = x;
         prev_y = y;
     }
 }
 
-void draw_graph(Adafruit_GFX *display, const String &label, int16_t corner_x,
-                int16_t corner_y, int16_t width, int16_t height,
-                size_t num_values, float values[]) {
+void draw_graph(Adafruit_GFX *display, const String &label, uint16_t line_color,
+                int16_t corner_x, int16_t corner_y, int16_t width,
+                int16_t height, size_t num_values, float values[]) {
     const int16_t padding = 5;
 
     int16_t fx, fy;
@@ -71,7 +71,21 @@ void draw_graph(Adafruit_GFX *display, const String &label, int16_t corner_x,
     } else {
         display->printf("%s: %.1fK", label.c_str(), last_val / 1000);
     }
-    draw_sparkline(display, corner_x + padding, corner_y + padding,
+    draw_sparkline(display, line_color, corner_x + padding, corner_y + padding,
                    width - padding * 2, height - fh - padding * 3, num_values,
                    values);
+}
+
+void show_status(Adafruit_GFX *display, const String &time,
+                 float battery_voltage, int16_t x, int16_t y) {
+    display->setFont(&Picopixel);
+    display->setCursor(x, y);
+
+    if (battery_voltage > 3.4f) {
+        display->setTextColor(EPD_BLACK);
+        display->printf("%.2f V   %s", battery_voltage, time);
+    } else {
+        display->setTextColor(EPD_RED);
+        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time);
+    }
 }

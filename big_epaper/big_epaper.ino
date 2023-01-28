@@ -1,6 +1,6 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
-#include <Fonts/FreeSans9pt7b.h>
+#include <GxEPD2_BW.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
@@ -8,10 +8,25 @@
 
 #include "adafruit_io.h"
 #include "arduino_secrets.h"
-#include "display.h"
 #include "graph.h"
 
 const size_t MAX_VALS = 300;
+
+#define MAX_DISPLAY_BUFFER_SIZE 15000ul  // ~15k is a good compromise
+#define MAX_HEIGHT(EPD)                                        \
+    (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) \
+         ? EPD::HEIGHT                                         \
+         : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
+
+#define EPD_BUSY 14
+#define EPD_RESET 32
+#define EPD_DC 33
+#define EPD_CS 15
+
+// Waveshare 4.2" B/W EPD.
+GxEPD2_BW<GxEPD2_420, MAX_HEIGHT(GxEPD2_420)> display(GxEPD2_420(EPD_CS, EPD_DC,
+                                                                 EPD_RESET,
+                                                                 EPD_BUSY));
 
 WiFiMulti wifi;
 
@@ -51,14 +66,14 @@ void loop() {
 
     send_data(client, "bigpaper-battery", battery_voltage());
 
-    String labels[] = {"",
-                       "weather.temp",
-                       "mbr.temperature",
+    String labels[] = {"weather.temp",
+                       "mbr.abs-humidity",
                        "mbr.pressure",
                        "finance.coinbase-btc-usd",
                        "finance.kraken-usdtzusd",
-
                        "finance.bitfinex-ustusd",
+
+                       "mbr.temperature",
                        "mbr.humidity",
                        "mbr.abs-humidity",
                        "mbr-sgp30.co2",
@@ -69,32 +84,28 @@ void loop() {
     display.firstPage();
     display.fillScreen(GxEPD_WHITE);
 
-    const int16_t graph_width = 200;
-    const int16_t graph_height = 100;
+    const int16_t graph_width = display.width() / 2;
+    const int16_t graph_height = display.height() / 3;
     for (int16_t x = 0; x < display.width() / graph_width; x++) {
         for (int16_t y = 0; y < display.height() / graph_height; y++) {
             String feed_name = labels[x + y * display.width() / graph_width];
             Serial.printf("Processing graph (%d, %d)\n", x, y);
-            if (feed_name.length() == 0) {
-                String time;
-                get_time(client, &time);
-                display.setFont(&FreeSans9pt7b);
-                display.setTextColor(GxEPD_BLACK);
-                display.setCursor(x * graph_width + 2, y * graph_height + 60);
-                display.print(time);
-                display.setCursor(x * graph_width + 2,
-                                  y * graph_height + graph_height * 4 / 5);
-                display.printf("%.2f V", battery_voltage());
-            } else {
+            if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
                 size_t val_count =
                     fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                draw_graph(name, x * graph_width, y * graph_height, graph_width,
-                           graph_height, val_count, vals);
+                draw_graph(&display, name, x * graph_width,
+                           y * graph_height, graph_width, graph_height,
+                           val_count, vals);
             }
         }
     }
+
+    String time;
+    get_time(client, &time);
+    show_status(&display, time, battery_voltage(), 2, 16);
+
     if (display.nextPage()) {
         Serial.println(
             "Display buffer is too small. Doesn't fit on single page.");
@@ -115,7 +126,7 @@ void loop() {
         esp_sleep_enable_timer_wakeup(60 * 60 * 1000000ULL);
     }
     esp_deep_sleep_start();
-    
+
     // we never reach here
     delay(3 * 60 * 1000);
 }

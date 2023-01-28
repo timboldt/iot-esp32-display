@@ -49,11 +49,6 @@ void loop() {
         Serial.println("Failed to create TCP client.");
     }
 
-#ifdef TRI_COLOR
-    send_data(client, "tricolor-battery", battery_voltage());
-
-    String labels[] = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd"};
-#else
     send_data(client, "bigpaper-battery", battery_voltage());
 
     String labels[] = {"",
@@ -69,7 +64,6 @@ void loop() {
                        "mbr-sgp30.co2",
                        "mbr-sgp30.tvoc",
                        "mbr.lux-db"};
-#endif
 
     Serial.println("Writing to display...");
     display.firstPage();
@@ -115,10 +109,10 @@ void loop() {
     //
     pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_I2C_POWER, LOW);
-    if (battery_voltage() > 3.8) {
+    if (battery_voltage() > 3.9) {
         esp_sleep_enable_timer_wakeup(3 * 60 * 1000000ULL);
     } else {
-        esp_sleep_enable_timer_wakeup(15 * 60 * 1000000ULL);
+        esp_sleep_enable_timer_wakeup(60 * 60 * 1000000ULL);
     }
     esp_deep_sleep_start();
     

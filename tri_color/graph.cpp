@@ -63,9 +63,9 @@ void draw_graph(Adafruit_GFX *display, const String &label, uint16_t line_color,
     display->setTextColor(EPD_BLACK);
     float last_val = values[num_values - 1];
     if (last_val < 2) {
-        display->printf("%s: %.3f", label.c_str(), last_val);
+        display->printf("%s: %.4f", label.c_str(), last_val);
     } else if (last_val < 100) {
-        display->printf("%s: %.2f", label.c_str(), last_val);
+        display->printf("%s: %.3f", label.c_str(), last_val);
     } else if (last_val < 1000) {
         display->printf("%s: %.f", label.c_str(), last_val);
     } else {

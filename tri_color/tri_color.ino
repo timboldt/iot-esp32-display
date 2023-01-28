@@ -102,7 +102,7 @@ void loop() {
     if (battery_voltage() > 3.9) {
         esp_sleep_enable_timer_wakeup(3 * 60 * 1000000ULL);
     } else {
-        esp_sleep_enable_timer_wakeup(30 * 60 * 1000000ULL);
+        esp_sleep_enable_timer_wakeup(60 * 60 * 1000000ULL);
     }
     esp_deep_sleep_start();
 

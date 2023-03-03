@@ -46,7 +46,7 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
                        "/feeds/" +
-                       feed_name + "/data/chart?hours=720&resolution=240";
+                       feed_name + "/data/chart?hours=120&resolution=30";
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
     if (https.begin(*client, url)) {
         int httpCode = https.GET();

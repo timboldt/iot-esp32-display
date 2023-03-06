@@ -87,6 +87,7 @@ void loop() {
     String time;
     get_time(client, &time);
     show_status(&display, time, battery_voltage(), 2, 8);
+    show_battery_icon(&display, battery_voltage());
 
     // Display values and then power down display (sleep == true).
     display.display(true);

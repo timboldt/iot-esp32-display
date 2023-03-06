@@ -10,3 +10,5 @@ void draw_graph(Adafruit_GFX *display, const String &label, uint16_t line_color,
 
 void show_status(Adafruit_GFX *display, const String &time,
                  float battery_voltage, int16_t x, int16_t y);
+
+void show_battery_icon(Adafruit_GFX *display, float battery_voltage);

@@ -89,3 +89,10 @@ void show_status(Adafruit_GFX *display, const String &time,
         display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time);
     }
 }
+
+void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
+    uint16_t fill_width = min(15.0f, (battery_voltage - 3.3f) / (4.0f - 3.3f) * 15.0f);
+    display->fillRect(display->width() - 20, display->height() - 15, fill_width, 10, EPD_RED);
+    display->drawRect(display->width() - 20, display->height() - 15, 15, 10, EPD_BLACK);
+    display->drawRect(display->width() - 5, display->height() - 12, 3, 4, EPD_BLACK);
+}

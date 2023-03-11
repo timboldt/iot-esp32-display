@@ -91,8 +91,28 @@ void show_status(Adafruit_GFX *display, const String &time,
 }
 
 void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
-    uint16_t fill_width = min(15.0f, (battery_voltage - 3.3f) / (4.0f - 3.3f) * 15.0f);
-    display->fillRect(display->width() - 20, display->height() - 15, fill_width, 10, EPD_RED);
-    display->drawRect(display->width() - 20, display->height() - 15, 15, 10, EPD_BLACK);
-    display->drawRect(display->width() - 5, display->height() - 12, 3, 4, EPD_BLACK);
+    const uint16_t BATTERY_WIDTH = 8;
+    const uint16_t BATTERY_HEIGHT = 12;
+    const uint16_t BATTERY_KNOB_WIDTH = 4;
+    const uint16_t BATTERY_KNOB_HEIGHT = 3;
+    const uint16_t EDGE_OFFSET = 1;
+
+    const float FILL_MAX = BATTERY_HEIGHT;
+    const float VOLTAGE_MIN = 3.3f;
+    const float VOLTAGE_MAX = 4.0f;
+    const uint16_t fill_size =
+        min(FILL_MAX, (battery_voltage - VOLTAGE_MIN) /
+                          (VOLTAGE_MAX - VOLTAGE_MIN) * FILL_MAX);
+
+    display->fillRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
+                      display->height() - fill_size - EDGE_OFFSET,
+                      BATTERY_WIDTH, fill_size, EPD_RED);
+    display->drawRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
+                      display->height() - FILL_MAX - EDGE_OFFSET, BATTERY_WIDTH,
+                      BATTERY_HEIGHT, EPD_BLACK);
+    display->drawRect(
+        display->width() - BATTERY_WIDTH / 2 - BATTERY_KNOB_WIDTH / 2 -
+            EDGE_OFFSET,
+        display->height() - BATTERY_HEIGHT - BATTERY_KNOB_HEIGHT - EDGE_OFFSET,
+        BATTERY_KNOB_WIDTH, BATTERY_KNOB_HEIGHT, EPD_BLACK);
 }

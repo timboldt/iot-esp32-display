@@ -4,8 +4,9 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
-#include <algorithm>
 #include <stdint.h>
+
+#include <algorithm>
 
 #include "adafruit_io.h"
 #include "arduino_secrets.h"
@@ -89,8 +90,8 @@ void loop() {
             if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
-                size_t val_count =
-                    fetch_data(client, feed_name, MAX_VALS, vals, &name);
+                size_t val_count = fetch_data(
+                    client, feed_name, config.days * 24, MAX_VALS, vals, &name);
                 uint16_t line_color = ((x + y) % 2 == 0) ? EPD_BLACK : EPD_RED;
                 draw_graph(&display, name, line_color, x * graph_width,
                            y * graph_height, graph_width, graph_height,

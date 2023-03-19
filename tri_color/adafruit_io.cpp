@@ -108,7 +108,8 @@ bool get_config(WiFiClientSecure* client, Config* config) {
 }
 
 size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
-                  size_t num_vals, float vals[], String* description) {
+                  size_t hours, size_t num_vals, float vals[],
+                  String* description) {
     *description = "NO DATA";
     if (!client) {
         return 0;
@@ -117,10 +118,33 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
     size_t val_count = 0;
     DynamicJsonDocument doc(32768);
 
+    const int DATAPOINTS = 300;
+    int resolution = hours * 60 / DATAPOINTS;
+    if (resolution < 1) {
+        resolution = 1;
+    } else if (resolution < 5) {
+        resolution = 5;
+    } else if (resolution < 10) {
+        resolution = 10;
+    } else if (resolution < 30) {
+        resolution = 30;
+    } else if (resolution < 60) {
+        resolution = 60;
+    } else if (resolution < 120) {
+        resolution = 120;
+    } else if (resolution < 240) {
+        resolution = 240;
+    } else if (resolution < 480) {
+        resolution = 480;
+    } else {
+        resolution = 960;
+    }
+
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
                        "/feeds/" +
-                       feed_name + "/data/chart?hours=120&resolution=30";
+                       feed_name + "/data/chart?hours=" + String(hours) +
+                       "&resolution=" + String(resolution);
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
     if (https.begin(*client, url)) {
         int httpCode = https.GET();

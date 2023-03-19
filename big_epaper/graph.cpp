@@ -1,8 +1,8 @@
 #include "graph.h"
 
-#include <GxEPD2_BW.h>
 #include <Arduino.h>
 #include <Fonts/FreeSans9pt7b.h>
+#include <GxEPD2_BW.h>
 
 static void get_min_max(size_t num_values, float values[], float *min_val,
                         float *max_val) {
@@ -27,9 +27,9 @@ static void get_min_max(size_t num_values, float values[], float *min_val,
     }
 }
 
-static void draw_sparkline(Adafruit_GFX *display,
-                           int16_t corner_x, int16_t corner_y, int16_t width,
-                           int16_t height, size_t num_values, float values[]) {
+static void draw_sparkline(Adafruit_GFX *display, int16_t corner_x,
+                           int16_t corner_y, int16_t width, int16_t height,
+                           size_t num_values, float values[]) {
     float min_val, max_val;
     get_min_max(num_values, values, &min_val, &max_val);
 
@@ -50,9 +50,9 @@ static void draw_sparkline(Adafruit_GFX *display,
     }
 }
 
-void draw_graph(Adafruit_GFX *display, const String &label,
-                int16_t corner_x, int16_t corner_y, int16_t width,
-                int16_t height, size_t num_values, float values[]) {
+void draw_graph(Adafruit_GFX *display, const String &label, int16_t corner_x,
+                int16_t corner_y, int16_t width, int16_t height,
+                size_t num_values, float values[]) {
     const int16_t padding = 5;
 
     int16_t fx, fy;
@@ -86,4 +86,31 @@ void show_status(Adafruit_GFX *display, const String &time,
     } else {
         display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time);
     }
+}
+
+void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
+    const uint16_t BATTERY_WIDTH = 10;
+    const uint16_t BATTERY_HEIGHT = 15;
+    const uint16_t BATTERY_KNOB_WIDTH = 5;
+    const uint16_t BATTERY_KNOB_HEIGHT = 3;
+    const uint16_t EDGE_OFFSET = 1;
+
+    const float FILL_MAX = BATTERY_HEIGHT;
+    const float VOLTAGE_MIN = 3.3f;
+    const float VOLTAGE_MAX = 4.0f;
+    const uint16_t fill_size =
+        min(FILL_MAX, (battery_voltage - VOLTAGE_MIN) /
+                          (VOLTAGE_MAX - VOLTAGE_MIN) * FILL_MAX);
+
+    display->fillRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
+                      display->height() - fill_size - EDGE_OFFSET,
+                      BATTERY_WIDTH, fill_size, GxEPD_BLACK);
+    display->drawRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
+                      display->height() - FILL_MAX - EDGE_OFFSET, BATTERY_WIDTH,
+                      BATTERY_HEIGHT, GxEPD_BLACK);
+    display->drawRect(
+        display->width() - BATTERY_WIDTH / 2 - BATTERY_KNOB_WIDTH / 2 -
+            EDGE_OFFSET,
+        display->height() - BATTERY_HEIGHT - BATTERY_KNOB_HEIGHT - EDGE_OFFSET,
+        BATTERY_KNOB_WIDTH, BATTERY_KNOB_HEIGHT, GxEPD_BLACK);
 }

@@ -105,6 +105,7 @@ void loop() {
     String time;
     get_time(client, &time);
     show_status(&display, time, battery_voltage(), 2, 16);
+    show_battery_icon(&display, battery_voltage());
 
     if (display.nextPage()) {
         Serial.println(

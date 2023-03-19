@@ -11,9 +11,17 @@ esp32:esp32   2.0.5
 ## Libraries
 
 ```
-Adafruit_GFX_Library 1.11.3
-Adafruit_BusIO       1.14.1
-Wire                 2.0.0
-SPI                  2.0.0
-GxEPD2               1.4.9
+Used library         Version Path                                                                               
+Adafruit GFX Library 1.11.5  ~/Arduino/libraries/Adafruit_GFX_Library                                   
+Adafruit BusIO       1.14.1  ~/Arduino/libraries/Adafruit_BusIO                                         
+Wire                 2.0.0   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/Wire            
+SPI                  2.0.0   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/SPI             
+GxEPD2               1.5.0   ~/Arduino/libraries/GxEPD2                                                 
+WiFi                 2.0.0   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/WiFi            
+WiFiClientSecure     2.0.0   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/WiFiClientSecure
+ArduinoJson          6.20.1  ~/Arduino/libraries/ArduinoJson                                            
+HTTPClient           2.0.0   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7/libraries/HTTPClient      
+
+Used platform Version Path                                                    
+esp32:esp32   2.0.7   ~/.arduino15/packages/esp32/hardware/esp32/2.0.7
 ```

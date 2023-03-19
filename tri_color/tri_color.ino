@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
+#include <algorithm>
 #include <stdint.h>
 
 #include "adafruit_io.h"
@@ -59,17 +60,31 @@ void loop() {
 
     send_data(client, "tricolor-battery", battery_voltage());
 
-    String labels[] = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd",
-                       "finance.bitfinex-ustusd"};
+    Config config;
+    if (get_config(client, &config)) {
+        config.rows = std::min((int16_t)2, std::max((int16_t)1, config.rows));
+        config.cols = std::min((int16_t)4, std::max((int16_t)1, config.cols));
+    } else {
+        Serial.println("Failed to read config. Reverting to default values.");
+        config.days = 7;
+        config.rows = 1;
+        config.cols = 3;
+        config.feeds = {"finance.coinbase-btc-usd", "finance.kraken-usdtzusd",
+                        "finance.bitfinex-ustusd"};
+    }
 
     Serial.println("Writing to display...");
     display.clearBuffer();
 
-    const int16_t graph_width = display.width() / 3;
-    const int16_t graph_height = display.height();
+    const int16_t graph_width = display.width() / config.cols;
+    const int16_t graph_height = display.height() / config.rows;
     for (int16_t x = 0; x < display.width() / graph_width; x++) {
         for (int16_t y = 0; y < display.height() / graph_height; y++) {
-            String feed_name = labels[x + y * display.width() / graph_width];
+            String feed_name;
+            size_t label_idx = x + y * display.width() / graph_width;
+            if (label_idx < config.feeds.size()) {
+                feed_name = config.feeds[label_idx];
+            }
             Serial.printf("Processing graph (%d, %d)\n", x, y);
             if (feed_name.length() > 0) {
                 String name;

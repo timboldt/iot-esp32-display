@@ -37,6 +37,7 @@ void setup() {
     Serial.println("Connecting to WiFi...");
     WiFi.mode(WIFI_STA);
     wifi.addAP(SECRET_WIFI_SSID, SECRET_WIFI_PASSWORD);
+    wifi.addAP(OPEN_WIFI_SSID);
     while (wifi.run() != WL_CONNECTED) {
         Serial.print(">");
         delay(1000);

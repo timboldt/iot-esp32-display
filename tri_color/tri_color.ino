@@ -87,7 +87,7 @@ void loop() {
             if (label_idx < config.feeds.size()) {
                 feed_name = config.feeds[label_idx];
             }
-            Serial.printf("Processing graph (%d, %d)\n", x, y);
+            Serial.printf("Processing graph %s (%d, %d)\r\n", feed_name.c_str(), x, y);
             if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];

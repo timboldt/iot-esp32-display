@@ -14,24 +14,25 @@ void get_time(WiFiClientSecure* client, String* time) {
     }
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
-                       "/integrations/time/strftime?fmt=%25I:%25M%20%25p";
+                       "/integrations/time/"
+                       "strftime?fmt=%25I:%25M%20%25p&tz=America/Los_Angeles";
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
     if (https.begin(*client, url)) {
         int httpCode = https.GET();
         if (httpCode > 0) {
-            Serial.printf("HTTP GET... code: %d\n", httpCode);
+            Serial.printf("HTTP GET... code: %d\r\n", httpCode);
 
             if (httpCode == HTTP_CODE_OK ||
                 httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
                 *time = https.getString();
             }
         } else {
-            Serial.printf("HTTPS GET failed, error: %s\n",
+            Serial.printf("HTTPS GET failed, error: %s\r\n",
                           https.errorToString(httpCode).c_str());
         }
         https.end();
     } else {
-        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+        Serial.printf("Failed to make HTTP call to %s\r\n", url.c_str());
     }
 }
 
@@ -96,12 +97,12 @@ bool get_config(WiFiClientSecure* client, Config* config) {
                 ok = decode_config(&https, config);
             }
         } else {
-            Serial.printf("HTTPS GET failed, error: %s\n",
+            Serial.printf("HTTPS GET failed, error: %s\r\n",
                           https.errorToString(httpCode).c_str());
         }
         https.end();
     } else {
-        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+        Serial.printf("Failed to make HTTP call to %s\r\n", url.c_str());
     }
 
     return ok;
@@ -151,7 +152,7 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
         if (httpCode > 0) {
             // HTTP header has been send and Server response header has
             // been handled
-            Serial.printf("HTTP GET... code: %d\n", httpCode);
+            Serial.printf("HTTP GET... code: %d\r\n", httpCode);
 
             if (httpCode == HTTP_CODE_OK ||
                 httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
@@ -173,12 +174,12 @@ size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
                 *description = doc["feed"]["name"].as<String>();
             }
         } else {
-            Serial.printf("HTTPS GET failed, error: %s\n",
+            Serial.printf("HTTPS GET failed, error: %s\r\n",
                           https.errorToString(httpCode).c_str());
         }
         https.end();
     } else {
-        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+        Serial.printf("Failed to make HTTP call to %s\r\n", url.c_str());
     }
 
     return val_count;
@@ -202,19 +203,19 @@ bool send_data(WiFiClientSecure* client, const String& feed_name, float val) {
         if (httpCode > 0) {
             // HTTP header has been send and Server response header has
             // been handled
-            Serial.printf("HTTP POST... code: %d\n", httpCode);
+            Serial.printf("HTTP POST... code: %d\r\n", httpCode);
 
             if (httpCode == HTTP_CODE_OK ||
                 httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
                 is_ok = true;
             }
         } else {
-            Serial.printf("HTTPS POST failed, error: %s\n",
+            Serial.printf("HTTPS POST failed, error: %s\r\n",
                           https.errorToString(httpCode).c_str());
         }
         https.end();
     } else {
-        Serial.printf("Failed to make HTTP call to %s", url.c_str());
+        Serial.printf("Failed to make HTTP call to %s\r\n", url.c_str());
     }
 
     return is_ok;

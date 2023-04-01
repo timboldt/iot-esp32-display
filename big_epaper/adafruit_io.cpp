@@ -14,7 +14,8 @@ void get_time(WiFiClientSecure* client, String* time) {
     }
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
-                       "/integrations/time/strftime?fmt=%25I:%25M%20%25p";
+                       "/integrations/time/"
+                       "strftime?fmt=%25I:%25M%20%25p&tz=America/Los_Angeles";
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
     if (https.begin(*client, url)) {
         int httpCode = https.GET();

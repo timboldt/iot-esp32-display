@@ -6,6 +6,8 @@
 #include <WiFiMulti.h>
 #include <stdint.h>
 
+#include <algorithm>
+
 #include "adafruit_io.h"
 #include "arduino_secrets.h"
 #include "graph.h"
@@ -66,38 +68,50 @@ void loop() {
 
     send_data(client, "bigpaper-battery", battery_voltage());
 
-    String labels[] = {"weather.temp",
-                       "mbr.abs-humidity",
-                       "mbr.pressure",
-                       "finance.coinbase-btc-usd",
-                       "finance.kraken-usdtzusd",
-                       "finance.bitfinex-ustusd",
-
-                       "mbr.temperature",
-                       "mbr.humidity",
-                       "mbr.abs-humidity",
-                       "mbr-sgp30.co2",
-                       "mbr-sgp30.tvoc",
-                       "mbr.lux-db"};
+    Config config;
+    if (get_config(client, &config)) {
+        config.rows = std::min((int16_t)3, std::max((int16_t)1, config.rows));
+        config.cols = std::min((int16_t)3, std::max((int16_t)1, config.cols));
+    } else {
+        Serial.println("Failed to read config. Reverting to default values.");
+        config.days = 7;
+        config.rows = 3;
+        config.cols = 2;
+        config.feeds = {"weather.temp",
+                        "mbr.abs-humidity",
+                        "mbr.pressure",
+                        "finance.coinbase-btc-usd",
+                        "finance.kraken-usdtzusd",
+                        "finance.bitfinex-ustusd",
+                        "mbr.temperature",
+                        "mbr.humidity",
+                        "mbr.abs-humidity",
+                        "mbr-sgp30.co2",
+                        "mbr-sgp30.tvoc",
+                        "mbr.lux-db"};
+    }
 
     Serial.println("Writing to display...");
     display.firstPage();
     display.fillScreen(GxEPD_WHITE);
 
-    const int16_t graph_width = display.width() / 2;
-    const int16_t graph_height = display.height() / 3;
+    const int16_t graph_width = display.width() / config.cols;
+    const int16_t graph_height = display.height() / config.rows;
     for (int16_t x = 0; x < display.width() / graph_width; x++) {
         for (int16_t y = 0; y < display.height() / graph_height; y++) {
-            String feed_name = labels[x + y * display.width() / graph_width];
-            Serial.printf("Processing graph (%d, %d)\n", x, y);
+            String feed_name;
+            size_t label_idx = x + y * display.width() / graph_width;
+            if (label_idx < config.feeds.size()) {
+                feed_name = config.feeds[label_idx];
+            }
+            Serial.printf("Processing graph %s (%d, %d)\r\n", feed_name, x, y);
             if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
                 size_t val_count =
                     fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                draw_graph(&display, name, x * graph_width,
-                           y * graph_height, graph_width, graph_height,
-                           val_count, vals);
+                draw_graph(&display, name, x * graph_width, y * graph_height,
+                           graph_width, graph_height, val_count, vals);
             }
         }
     }

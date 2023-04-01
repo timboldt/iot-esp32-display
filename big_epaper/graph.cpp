@@ -82,9 +82,9 @@ void show_status(Adafruit_GFX *display, const String &time,
     display->setCursor(x, y);
 
     if (battery_voltage > 3.4f) {
-        display->printf("%.2f V   %s", battery_voltage, time);
+        display->printf("%.2f V   %s", battery_voltage, time.c_str());
     } else {
-        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time);
+        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time.c_str());
     }
 }
 

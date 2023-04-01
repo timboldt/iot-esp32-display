@@ -95,23 +95,27 @@ void loop() {
     display.firstPage();
     display.fillScreen(GxEPD_WHITE);
 
+    const int16_t title_bar_height = 15;
     const int16_t graph_width = display.width() / config.cols;
-    const int16_t graph_height = display.height() / config.rows;
-    for (int16_t x = 0; x < display.width() / graph_width; x++) {
-        for (int16_t y = 0; y < display.height() / graph_height; y++) {
+    const int16_t graph_height =
+        (display.height() - title_bar_height) / config.rows;
+    for (int16_t x = 0; x < config.cols; x++) {
+        for (int16_t y = 0; y < config.rows; y++) {
             String feed_name;
-            size_t label_idx = x + y * display.width() / graph_width;
+            size_t label_idx = x + y * config.cols;
             if (label_idx < config.feeds.size()) {
                 feed_name = config.feeds[label_idx];
             }
-            Serial.printf("Processing graph %s (%d, %d)\r\n", feed_name.c_str(), x, y);
+            Serial.printf("Processing graph %s (%d, %d)\r\n", feed_name.c_str(),
+                          x, y);
             if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
                 size_t val_count =
                     fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                draw_graph(&display, name, x * graph_width, y * graph_height,
-                           graph_width, graph_height, val_count, vals);
+                draw_graph(&display, name, x * graph_width,
+                           y * graph_height + title_bar_height, graph_width,
+                           graph_height, val_count, vals);
             }
         }
     }

@@ -15,8 +15,10 @@ void get_time(WiFiClientSecure* client, String* time) {
     HTTPClient https;
     const String url = "https://io.adafruit.com/api/v2/" ADAFRUIT_IO_USERNAME
                        "/integrations/time/"
-                       "strftime?fmt=%25I:%25M%20%25p&tz=America/Los_Angeles";
+                       "strftime?fmt=%25B%20%25e%2C%20%25Y%20%25l%3A%25M+%25p&"
+                       "tz=America/Los_Angeles";
     https.addHeader("X-AIO-Key", ADAFRUIT_IO_KEY);
+    Serial.printf("HTTP GET %s\r\n", url.c_str());
     if (https.begin(*client, url)) {
         int httpCode = https.GET();
         if (httpCode > 0) {

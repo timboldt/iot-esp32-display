@@ -86,7 +86,8 @@ void show_status(Adafruit_GFX *display, const String &time,
         display->printf("%.2f V   %s", battery_voltage, time.c_str());
     } else {
         display->setTextColor(EPD_RED);
-        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time.c_str());
+        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage,
+                        time.c_str());
     }
 }
 
@@ -94,7 +95,7 @@ void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
     const uint16_t BATTERY_WIDTH = 8;
     const uint16_t BATTERY_HEIGHT = 12;
     const uint16_t BATTERY_KNOB_WIDTH = 4;
-    const uint16_t BATTERY_KNOB_HEIGHT = 3;
+    const uint16_t BATTERY_KNOB_HEIGHT = 2;
     const uint16_t EDGE_OFFSET = 1;
 
     const float FILL_MAX = BATTERY_HEIGHT;
@@ -104,15 +105,16 @@ void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
         min(FILL_MAX, (battery_voltage - VOLTAGE_MIN) /
                           (VOLTAGE_MAX - VOLTAGE_MIN) * FILL_MAX);
 
-    display->fillRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
-                      display->height() - fill_size - EDGE_OFFSET,
-                      BATTERY_WIDTH, fill_size, EPD_RED);
-    display->drawRect(display->width() - BATTERY_WIDTH - EDGE_OFFSET,
-                      display->height() - FILL_MAX - EDGE_OFFSET, BATTERY_WIDTH,
-                      BATTERY_HEIGHT, EPD_BLACK);
+    display->fillRect(
+        display->width() - BATTERY_HEIGHT - EDGE_OFFSET - BATTERY_KNOB_HEIGHT,
+        display->height() - BATTERY_WIDTH - EDGE_OFFSET, fill_size,
+        BATTERY_WIDTH, EPD_RED);
     display->drawRect(
-        display->width() - BATTERY_WIDTH / 2 - BATTERY_KNOB_WIDTH / 2 -
-            EDGE_OFFSET,
-        display->height() - BATTERY_HEIGHT - BATTERY_KNOB_HEIGHT - EDGE_OFFSET,
-        BATTERY_KNOB_WIDTH, BATTERY_KNOB_HEIGHT, EPD_BLACK);
+        display->width() - BATTERY_HEIGHT - EDGE_OFFSET - BATTERY_KNOB_HEIGHT,
+        display->height() - BATTERY_WIDTH - EDGE_OFFSET, BATTERY_HEIGHT,
+        BATTERY_WIDTH, EPD_BLACK);
+    display->drawRect(display->width() - BATTERY_KNOB_HEIGHT - EDGE_OFFSET,
+                      display->height() - BATTERY_WIDTH / 2 -
+                          BATTERY_KNOB_WIDTH / 2 - EDGE_OFFSET,
+                      BATTERY_KNOB_HEIGHT, BATTERY_KNOB_WIDTH, EPD_BLACK);
 }

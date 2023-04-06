@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <WiFiClientSecure.h>
 #include <stdint.h>
-
 #include <vector>
 
 class Config {

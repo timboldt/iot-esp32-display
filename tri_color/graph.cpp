@@ -83,10 +83,10 @@ void show_status(Adafruit_GFX *display, const String &time,
 
     if (battery_voltage > 3.4f) {
         display->setTextColor(EPD_BLACK);
-        display->printf("%.2f V   %s", battery_voltage, time);
+        display->printf("%.2f V   %s", battery_voltage, time.c_str());
     } else {
         display->setTextColor(EPD_RED);
-        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time);
+        display->printf("LOW BATTERY  %.2f V   %s", battery_voltage, time.c_str());
     }
 }
 
@@ -99,7 +99,7 @@ void show_battery_icon(Adafruit_GFX *display, float battery_voltage) {
 
     const float FILL_MAX = BATTERY_HEIGHT;
     const float VOLTAGE_MIN = 3.3f;
-    const float VOLTAGE_MAX = 4.0f;
+    const float VOLTAGE_MAX = 3.8f;
     const uint16_t fill_size =
         min(FILL_MAX, (battery_voltage - VOLTAGE_MIN) /
                           (VOLTAGE_MAX - VOLTAGE_MIN) * FILL_MAX);

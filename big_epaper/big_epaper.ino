@@ -112,8 +112,8 @@ void loop() {
                 String name;
                 float vals[MAX_VALS];
                 size_t val_count =
-                    fetch_data(client, feed_name, MAX_VALS, vals, &name);
-                draw_graph(&display, name, x * graph_width,
+                    fetch_data(client, feed_name, config.days * 24, MAX_VALS, vals, &name);
+                draw_graph(&display, name, GxEPD_BLACK, x * graph_width,
                            y * graph_height + title_bar_height, graph_width,
                            graph_height, val_count, vals);
             }

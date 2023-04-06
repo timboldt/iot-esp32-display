@@ -18,6 +18,7 @@ void get_time(WiFiClientSecure* client, String* time);
 bool get_config(WiFiClientSecure* client, Config* config);
 
 size_t fetch_data(WiFiClientSecure* client, const String& feed_name,
-                  size_t num_vals, float vals[], String* description);
+                  size_t hours, size_t num_vals, float vals[],
+                  String* description);
 
 bool send_data(WiFiClientSecure* client, const String& feed_name, float val);

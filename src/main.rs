@@ -69,10 +69,10 @@ fn main() -> Result<()> {
         Epd4in2::new(&mut spi_device, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     // Setup the graphics
-    // let mut display = Display4in2::default();
-    // display.clear_buffer(Color::White);
-    //epd4in2.update_frame(&mut spi_device, display.buffer(), &mut delay)?;
-    epd4in2.clear_frame(&mut spi_device, &mut delay)?;
+    let mut display = Display4in2::default();
+    display.clear_buffer(Color::Black);
+    epd4in2.update_frame(&mut spi_device, display.buffer(), &mut delay)?;
+    //epd4in2.clear_frame(&mut spi_device, &mut delay)?;
     epd4in2.display_frame(&mut spi_device, &mut delay)?;
     epd4in2.sleep(&mut spi_device, &mut delay)?;
 

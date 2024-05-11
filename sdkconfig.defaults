@@ -1,4 +1,5 @@
 # Rust often needs a bit of an extra main task stack size compared to C (the default is 3K)
+# TODO: Make this more reasonable once display buffer issue is resolved.
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=8000
 
 # Use this to set FreeRTOS kernel tick frequency to 1000 Hz (100 Hz by default).

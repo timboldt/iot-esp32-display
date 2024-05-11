@@ -2,18 +2,29 @@ mod secrets;
 
 use anyhow::{bail, Result};
 use core::str;
+use embedded_hal::spi::MODE_0;
 use embedded_svc::{
     http::{client::Client, Method},
     io::Read,
 };
-use esp_idf_svc::wifi::Configuration as WifiConfiguration;
+use epd_waveshare::{
+    color::*,
+    epd4in2::{Display4in2, Epd4in2},
+    prelude::*,
+};
+use esp_idf_hal::{
+    gpio::{AnyOutputPin, PinDriver},
+    peripheral,
+    prelude::Peripherals,
+    spi::{config::Config, SpiDeviceDriver, SpiDriver, SpiDriverConfig, SPI2},
+    units::FromValueType,
+};
 use esp_idf_svc::{
     eventloop::EspSystemEventLoop,
-    hal::peripheral,
-    hal::prelude::Peripherals,
     http::client::{Configuration, EspHttpConnection},
     wifi::{AuthMethod, BlockingWifi, ClientConfiguration, EspWifi},
 };
+use esp_idf_svc::{hal::delay::Ets, wifi::Configuration as WifiConfiguration};
 use log::info;
 
 fn main() -> Result<()> {
@@ -23,7 +34,7 @@ fn main() -> Result<()> {
     let peripherals = Peripherals::take().unwrap();
     let sysloop = EspSystemEventLoop::take()?;
 
-    // Connect to the Wi-Fi network
+    // Connect to the Wi-Fi network.
     let _wifi = wifi(
         secrets::WIFI_SSID,
         secrets::WIFI_PASSWORD,
@@ -31,7 +42,39 @@ fn main() -> Result<()> {
         sysloop,
     )?;
 
+    // Download the content.
     get(format!("{}/test.txt", secrets::BUCKET_URL))?;
+
+    let sclk = peripherals.pins.gpio5;
+    let sdo = peripherals.pins.gpio19;
+    let sdi = peripherals.pins.gpio21;
+    let cs = PinDriver::output(peripherals.pins.gpio15)?;
+    let busy = PinDriver::input(peripherals.pins.gpio14)?;
+    let dc = PinDriver::output(peripherals.pins.gpio33)?;
+    let rst = PinDriver::output(peripherals.pins.gpio32)?;
+    let mut delay = Ets;
+
+    let driver = SpiDriver::new::<SPI2>(
+        peripherals.spi2,
+        sclk,
+        sdo,
+        Some(sdi),
+        &SpiDriverConfig::new(),
+    )?;
+    let config = Config::new().baudrate(4.MHz().into()).data_mode(MODE_0);
+    let mut spi_device = SpiDeviceDriver::new(&driver, AnyOutputPin::none(), &config)?;
+
+    // Setup the epd
+    let mut epd4in2 =
+        Epd4in2::new(&mut spi_device, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+
+    // Setup the graphics
+    // let mut display = Display4in2::default();
+    // display.clear_buffer(Color::White);
+    //epd4in2.update_frame(&mut spi_device, display.buffer(), &mut delay)?;
+    epd4in2.clear_frame(&mut spi_device, &mut delay)?;
+    epd4in2.display_frame(&mut spi_device, &mut delay)?;
+    epd4in2.sleep(&mut spi_device, &mut delay)?;
 
     Ok(())
 }

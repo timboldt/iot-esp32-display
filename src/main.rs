@@ -31,7 +31,7 @@ fn main() -> Result<()> {
         sysloop,
     )?;
 
-    get("https://espressif.com/")?;
+    get(format!("{}/test.txt", secrets::BUCKET_URL))?;
 
     Ok(())
 }

@@ -2,6 +2,7 @@ mod secrets;
 
 use anyhow::{bail, Result};
 use core::str;
+use embedded_graphics::{pixelcolor::BinaryColor, Pixel};
 use embedded_hal::spi::MODE_0;
 use embedded_svc::{
     http::{client::Client, Method},
@@ -25,6 +26,7 @@ use esp_idf_svc::{
 };
 use esp_idf_svc::{hal::delay::Ets, wifi::Configuration as WifiConfiguration};
 use log::info;
+use tinybmp::Bmp;
 
 fn main() -> Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -67,7 +69,10 @@ fn main() -> Result<()> {
     // Setup the graphics buffer.
     let mut display = Display4in2::default();
     // Load the image into the buffer.
-    get(format!("{}/epd42bw.img", secrets::BUCKET_URL), display.get_mut_buffer())?;
+    get(
+        format!("{}/epd42bw.bmp", secrets::BUCKET_URL),
+        display.get_mut_buffer(),
+    )?;
     // Output it to the actual epaper.
     epd4in2.update_and_display_frame(&mut spi_device, display.buffer(), &mut delay)?;
     // Turn off the epaper display's power.
@@ -143,7 +148,12 @@ pub fn wifi(
     Ok(Box::new(esp_wifi))
 }
 
-fn get(url: impl AsRef<str>, buffer: &mut [u8]) -> Result<()> {
+fn get(url: impl AsRef<str>, display_buffer: &mut [u8]) -> Result<()> {
+    static mut BMP_BUF: [u8; 100000] = [0; 100000];
+
+    #[allow(static_mut_refs)]
+    let buffer = unsafe { &mut BMP_BUF };
+
     // 1. Create a new EspHttpClient. (Check documentation)
     // ANCHOR: connection
     let connection = EspHttpConnection::new(&Configuration {
@@ -155,7 +165,7 @@ fn get(url: impl AsRef<str>, buffer: &mut [u8]) -> Result<()> {
     let mut client = Client::wrap(connection);
 
     // 2. Open a GET request to `url`
-    let headers = [("accept", "text/plain")];
+    let headers = [("accept", "application/octet-stream")];
     let request = client.request(Method::Get, url.as_ref(), &headers)?;
 
     // 3. Submit write request and check the status code of the response.
@@ -171,7 +181,7 @@ fn get(url: impl AsRef<str>, buffer: &mut [u8]) -> Result<()> {
             let mut total = 0;
             let mut reader = response;
             loop {
-                if let Ok(size) = Read::read(&mut reader, &mut buffer[offset..]) {
+                if let Ok(size) = Read::read(&mut reader,&mut buffer[offset..]) {
                     if size == 0 {
                         break;
                     }
@@ -182,6 +192,21 @@ fn get(url: impl AsRef<str>, buffer: &mut [u8]) -> Result<()> {
             info!("Total: {} bytes", total);
         }
         _ => bail!("Unexpected response code: {}", status),
+    }
+
+    if let Ok(bmp) = Bmp::<BinaryColor>::from_slice(buffer) {
+        for Pixel(position, color) in bmp.pixels() {
+            if position.x < 400 && position.y < 300 {
+                let byte_loc = ((position.x + position.y * 400) / 8) as usize;
+                let bit = 1u8 << (7 - position.x % 8);
+                match color {
+                    BinaryColor::On => display_buffer[byte_loc] |= bit,
+                    BinaryColor::Off => display_buffer[byte_loc] &= !bit,
+                };
+            }
+        }
+    } else {
+        bail!("Unexpected BMP format");
     }
 
     Ok(())

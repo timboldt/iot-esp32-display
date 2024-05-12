@@ -8,7 +8,6 @@ use embedded_svc::{
     io::Read,
 };
 use epd_waveshare::{
-    color::*,
     epd4in2::{Display4in2, Epd4in2},
     prelude::*,
 };
@@ -42,9 +41,6 @@ fn main() -> Result<()> {
         sysloop,
     )?;
 
-    // Download the content.
-    get(format!("{}/test.txt", secrets::BUCKET_URL))?;
-
     let sclk = peripherals.pins.gpio5;
     let sdo = peripherals.pins.gpio19;
     let sdi = peripherals.pins.gpio21;
@@ -68,12 +64,13 @@ fn main() -> Result<()> {
     let mut epd4in2 =
         Epd4in2::new(&mut spi_device, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
-    // Setup the graphics
+    // Setup the graphics buffer.
     let mut display = Display4in2::default();
-    display.clear_buffer(Color::Black);
-    epd4in2.update_frame(&mut spi_device, display.buffer(), &mut delay)?;
-    //epd4in2.clear_frame(&mut spi_device, &mut delay)?;
-    epd4in2.display_frame(&mut spi_device, &mut delay)?;
+    // Load the image into the buffer.
+    get(format!("{}/epd42bw.img", secrets::BUCKET_URL), display.get_mut_buffer())?;
+    // Output it to the actual epaper.
+    epd4in2.update_and_display_frame(&mut spi_device, display.buffer(), &mut delay)?;
+    // Turn off the epaper display's power.
     epd4in2.sleep(&mut spi_device, &mut delay)?;
 
     Ok(())
@@ -146,7 +143,7 @@ pub fn wifi(
     Ok(Box::new(esp_wifi))
 }
 
-fn get(url: impl AsRef<str>) -> Result<()> {
+fn get(url: impl AsRef<str>, buffer: &mut [u8]) -> Result<()> {
     // 1. Create a new EspHttpClient. (Check documentation)
     // ANCHOR: connection
     let connection = EspHttpConnection::new(&Configuration {
@@ -170,37 +167,16 @@ fn get(url: impl AsRef<str>) -> Result<()> {
 
     match status {
         200..=299 => {
-            // 4. if the status is OK, read response data chunk by chunk into a buffer and print it until done
-            //
-            // NB. see http_client.rs for an explanation of the offset mechanism for handling chunks that are
-            // split in the middle of valid UTF-8 sequences. This case is encountered a lot with the given
-            // example URL.
-            let mut buf = [0_u8; 256];
             let mut offset = 0;
             let mut total = 0;
             let mut reader = response;
             loop {
-                if let Ok(size) = Read::read(&mut reader, &mut buf[offset..]) {
+                if let Ok(size) = Read::read(&mut reader, &mut buffer[offset..]) {
                     if size == 0 {
                         break;
                     }
+                    offset += size;
                     total += size;
-                    // 5. try converting the bytes into a Rust (UTF-8) string and print it
-                    let size_plus_offset = size + offset;
-                    match str::from_utf8(&buf[..size_plus_offset]) {
-                        Ok(text) => {
-                            print!("{}", text);
-                            offset = 0;
-                        }
-                        Err(error) => {
-                            let valid_up_to = error.valid_up_to();
-                            unsafe {
-                                print!("{}", str::from_utf8_unchecked(&buf[..valid_up_to]));
-                            }
-                            buf.copy_within(valid_up_to.., 0);
-                            offset = size_plus_offset - valid_up_to;
-                        }
-                    }
                 }
             }
             info!("Total: {} bytes", total);

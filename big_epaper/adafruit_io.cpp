@@ -63,7 +63,7 @@ bool decode_config(HTTPClient* https, Config* config) {
     }
 
     JsonObject c = doc[CONFIG_NAME].as<JsonObject>();
-    if (c == nullptr) {
+    if (c.isNull()) {
         Serial.println("Could not find config '" CONFIG_NAME "' object.");
         return false;
     }

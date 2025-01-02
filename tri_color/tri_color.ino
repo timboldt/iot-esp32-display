@@ -14,6 +14,8 @@
 
 const size_t MAX_VALS = 300;
 
+const int SLEEP_SECONDS = 6 * 3600;
+
 #define EPD_BUSY -1
 #define EPD_RESET -1
 #define EPD_DC 33
@@ -120,11 +122,7 @@ void loop() {
     //
     pinMode(NEOPIXEL_I2C_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_I2C_POWER, LOW);
-    if (battery_voltage() > 3.9) {
-        esp_sleep_enable_timer_wakeup(3 * 60 * 1000000ULL);
-    } else {
-        esp_sleep_enable_timer_wakeup(60 * 60 * 1000000ULL);
-    }
+    esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);
     esp_deep_sleep_start();
 
     // we never reach here

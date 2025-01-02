@@ -2,6 +2,7 @@
 
 #include <Adafruit_ThinkInk.h>
 #include <Arduino.h>
+#include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/Picopixel.h>
 
 static void get_min_max(size_t num_values, float values[], float *min_val,
@@ -57,19 +58,19 @@ void draw_graph(Adafruit_GFX *display, const String &label, uint16_t line_color,
 
     int16_t fx, fy;
     uint16_t fw, fh;
-    display->setFont(&Picopixel);
+    display->setFont(&FreeSans9pt7b);
     display->getTextBounds(label, corner_x, corner_y, &fx, &fy, &fw, &fh);
-    display->setCursor(corner_x, corner_y + height - padding);
+    display->setCursor(corner_x + fw / 2, corner_y + height - padding);
     display->setTextColor(EPD_BLACK);
     float last_val = values[num_values - 1];
     if (last_val < 2) {
-        display->printf("%s: %.4f", label.c_str(), last_val);
+        display->printf("%.4f", last_val);
     } else if (last_val < 100) {
-        display->printf("%s: %.3f", label.c_str(), last_val);
+        display->printf("%.3f", last_val);
     } else if (last_val < 1000) {
-        display->printf("%s: %.f", label.c_str(), last_val);
+        display->printf("%.f", last_val);
     } else {
-        display->printf("%s: %.1fK", label.c_str(), last_val / 1000);
+        display->printf("%.1fK", last_val / 1000);
     }
     draw_sparkline(display, line_color, corner_x + padding, corner_y + padding,
                    width - padding * 2, height - fh - padding * 3, num_values,

@@ -46,7 +46,7 @@ void setup() {
     Serial.println("Connecting to WiFi...");
     WiFi.mode(WIFI_STA);
     wifi.addAP(SECRET_WIFI_SSID, SECRET_WIFI_PASSWORD);
-    //wifi.addAP(OPEN_WIFI_SSID);
+    // wifi.addAP(OPEN_WIFI_SSID);
     while (wifi.run() != WL_CONNECTED) {
         Serial.print(">");
         delay(1000);
@@ -72,27 +72,16 @@ void loop() {
     send_data(client, "bigpaper-battery", battery_voltage());
 
     Config config;
-    if (get_config(client, &config)) {
-        config.rows = std::min((int16_t)3, std::max((int16_t)1, config.rows));
-        config.cols = std::min((int16_t)3, std::max((int16_t)1, config.cols));
-    } else {
-        Serial.println("Failed to read config. Reverting to default values.");
-        config.days = 7;
-        config.rows = 3;
-        config.cols = 2;
-        config.feeds = {"weather.temp",
-                        "mbr.abs-humidity",
-                        "mbr.pressure",
-                        "finance.coinbase-btc-usd",
-                        "finance.kraken-usdtzusd",
-                        "finance.bitfinex-ustusd",
-                        "mbr.temperature",
-                        "mbr.humidity",
-                        "mbr.abs-humidity",
-                        "mbr-sgp30.co2",
-                        "mbr-sgp30.tvoc",
-                        "mbr.lux-db"};
-    }
+    config.days = 7;
+    config.rows = 2;
+    config.cols = 2;
+    config.feeds = {
+        "finance.coinbase-btc-usd",
+        // "finance.kraken-usdtzusd",
+        "finance.tsla",
+        "finance.qqq",
+        "finance.ionq",
+    };
 
     Serial.println("Writing to display...");
     display.firstPage();
@@ -114,8 +103,8 @@ void loop() {
             if (feed_name.length() > 0) {
                 String name;
                 float vals[MAX_VALS];
-                size_t val_count =
-                    fetch_data(client, feed_name, config.days * 24, MAX_VALS, vals, &name);
+                size_t val_count = fetch_data(
+                    client, feed_name, config.days * 24, MAX_VALS, vals, &name);
                 draw_graph(&display, name, GxEPD_BLACK, x * graph_width,
                            y * graph_height + title_bar_height, graph_width,
                            graph_height, val_count, vals);

@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "adafruit_io.h"
+#include "twelvedata.h"
 #include "arduino_secrets.h"
 #include "graph.h"
 
@@ -69,18 +69,15 @@ void loop() {
         Serial.println("Failed to create TCP client.");
     }
 
-    send_data(client, "bigpaper-battery", battery_voltage());
-
     Config config;
-    config.days = 7;
+    config.days = 30;
     config.rows = 2;
     config.cols = 2;
     config.feeds = {
-        "finance.coinbase-btc-usd",
-        // "finance.kraken-usdtzusd",
-        "finance.tsla",
-        "finance.qqq",
-        "finance.ionq",
+        "BTC/USD",
+        "QQQ",
+        "IONQ",
+        "TSLA",
     };
 
     Serial.println("Writing to display...");

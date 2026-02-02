@@ -70,7 +70,7 @@ void loop() {
     }
 
     Config config;
-    config.days = 30;
+    config.days = 90;
     config.rows = 2;
     config.cols = 2;
     config.feeds = {
